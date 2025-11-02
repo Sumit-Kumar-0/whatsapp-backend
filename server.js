@@ -24,8 +24,14 @@ app.use(helmet({
 app.use(cors({
   origin: process.env.FRONTEND_URL,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+}));
+
+// 👇 aur ye bhi add kar just below cors()
+app.options('*', cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
 }));
 
 app.use(cookieParser());

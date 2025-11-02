@@ -1,5 +1,6 @@
 import express from 'express';
 import { protect, authorize } from '../middleware/auth.js';
+import User from '../models/User.js';
 
 const router = express.Router();
 
@@ -32,9 +33,10 @@ router.get('/dashboard', async (req, res) => {
 // Get all vendors
 router.get('/vendors', async (req, res) => {
   try {
+    const vendors = await User.find({ role: 'vendor' });
     res.status(200).json({
       success: true,
-      data: []
+      data: vendors
     });
   } catch (error) {
     res.status(500).json({
