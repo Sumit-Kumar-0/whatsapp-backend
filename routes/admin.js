@@ -1,6 +1,13 @@
 import express from 'express';
 import { protect, authorize } from '../middleware/auth.js';
-import User from '../models/User.js';
+import {
+  getAllVendors,
+  getVendorById,
+  createVendor,
+  updateVendor,
+  deleteVendor
+} from '../controllers/admin/vendorController.js';
+import { getDashboardStats } from '../controllers/admin/dashboardController.js';
 
 const router = express.Router();
 
@@ -8,42 +15,14 @@ const router = express.Router();
 router.use(protect);
 router.use(authorize('admin'));
 
-// Admin dashboard stats
-router.get('/dashboard', async (req, res) => {
-  try {
-    res.status(200).json({
-      success: true,
-      data: {
-        totalVendors: 0,
-        totalActiveVendors: 0,
-        totalContacts: 0,
-        totalCampaigns: 0,
-        messagesInQueue: 0,
-        messagesProcessed: 0
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server Error'
-    });
-  }
-});
+// dashboard
+router.get('/dashboard', getDashboardStats);
 
-// Get all vendors
-router.get('/vendors', async (req, res) => {
-  try {
-    const vendors = await User.find({ role: 'vendor' });
-    res.status(200).json({
-      success: true,
-      data: vendors
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server Error'
-    });
-  }
-});
+// vendors
+router.get('/vendors', getAllVendors);
+router.get('/vendors/:id', getVendorById);
+router.post('/vendors/', createVendor);
+router.put('/vendors/:id', updateVendor);
+router.delete('/vendors/:id', deleteVendor);
 
 export default router;
