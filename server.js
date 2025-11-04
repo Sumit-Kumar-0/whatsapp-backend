@@ -5,6 +5,8 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+// import { initializeDefaultConfigs } from './services/configService.js';
+// import { initializeDefaultSubscriptionPlans } from './services/subscriptionPlanService.js';
 
 // Routes
 import authRoutes from './routes/auth.js';
@@ -174,6 +176,30 @@ app.use('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
+
+// app.listen(PORT, async () => {
+//   console.log(`Server running on port ${PORT}`);
+  
+//   // Initialize default configurations
+//   try {
+//     await initializeDefaultConfigs();
+//     console.log('Default configurations checked/initialized');
+//   } catch (error) {
+//     console.error('Error initializing default configs:', error);
+//   }
+// });
+
+// app.listen(PORT, async () => {
+//   console.log(`Server running on port ${PORT}`);
+  
+//   // Initialize default subscription plans
+//   try {
+//     await initializeDefaultSubscriptionPlans();
+//     console.log('Default subscription plans checked/initialized');
+//   } catch (error) {
+//     console.error('Error initializing default subscription plans:', error);
+//   }
+// });
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

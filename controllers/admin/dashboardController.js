@@ -29,34 +29,18 @@ export const getDashboardStats = async (req, res) => {
     });
 
     // 7. Vendor Growth Data - LAST 6 MONTHS REAL DATA
-    const currentDate = new Date('2025-11-03');
-    currentDate.setHours(23, 59, 59, 999); // End of day tak include karo
+    const currentDate = new Date();
+    currentDate.setHours(23, 59, 59, 999);
     
     const sixMonthsAgo = new Date(currentDate);
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5); // June 2025 se start
-    sixMonthsAgo.setDate(1); // Month ke first day pe set karo
-    sixMonthsAgo.setHours(0, 0, 0, 0); // Time 00:00:00 set karo
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
 
     console.log('Date Range:', {
       start: sixMonthsAgo.toISOString(),
       end: currentDate.toISOString()
     });
-
-    // Last 6 months ki list banao (Jun 2025 - Nov 2025)
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const last6Months = [];
-    
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(currentDate);
-      date.setMonth(date.getMonth() - i);
-      last6Months.push({
-        year: date.getFullYear(),
-        month: date.getMonth() + 1, // 1-based month
-        monthName: `${monthNames[date.getMonth()]}`
-      });
-    }
-
-    console.log('Last 6 months:', last6Months);
 
     // Database se vendor growth data lao - REAL DATA
     const vendorGrowth = await User.aggregate([
@@ -73,7 +57,7 @@ export const getDashboardStats = async (req, res) => {
         $group: {
           _id: {
             year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' } // MongoDB 1-based month
+            month: { $month: '$createdAt' }
           },
           count: { $sum: 1 }
         }
@@ -83,28 +67,38 @@ export const getDashboardStats = async (req, res) => {
       }
     ]);
 
-    console.log('Vendor Growth from DB:', JSON.stringify(vendorGrowth, null, 2));
+    console.log('Vendor Growth from DB:', vendorGrowth);
 
-    // Format growth data with PROPER MONTH MATCHING
+    // Create map for easy lookup
     const vendorGrowthMap = new Map();
-    
     vendorGrowth.forEach(item => {
       const key = `${item._id.year}-${item._id.month}`;
       vendorGrowthMap.set(key, item.count);
-      console.log(`Setting key: ${key}, count: ${item.count}`);
+      console.log(`Key: ${key} -> Count: ${item.count}`);
     });
 
-    const vendorGrowthData = last6Months.map(monthObj => {
-      const key = `${monthObj.year}-${monthObj.month}`;
-      const vendorsCount = vendorGrowthMap.get(key) || 0;
+    // Generate last 6 months array with proper formatting
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const vendorGrowthData = [];
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(currentDate);
+      date.setMonth(date.getMonth() - i);
       
-      console.log(`Checking month: ${monthObj.monthName} (${monthObj.month}), Key: ${key}, Found: ${vendorsCount}`);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1; // 1-based month for MongoDB
+      const key = `${year}-${month}`;
       
-      return {
-        month: monthObj.monthName,
-        vendors: vendorsCount
+      const monthData = {
+        month: monthNames[date.getMonth()],
+        vendors: vendorGrowthMap.get(key) || 0
       };
-    });
+      
+      console.log(`Month: ${monthData.month}, Key: ${key}, Count: ${monthData.vendors}`);
+      vendorGrowthData.push(monthData);
+    }
+
+    console.log('Final Vendor Growth Data:', vendorGrowthData);
 
     // 8. Additional Real Stats
     const activeCampaigns = await Campaign.countDocuments({ status: 'active' });
@@ -130,6 +124,7 @@ export const getDashboardStats = async (req, res) => {
     const deliveryRatePercent = totalSentMessages > 0 ? 
       Math.round((deliveredCount / totalSentMessages) * 100) : 0;
 
+    // Final Response
     res.status(200).json({
       success: true,
       data: {
@@ -153,18 +148,6 @@ export const getDashboardStats = async (req, res) => {
         performance: {
           deliveryRate: deliveryRatePercent,
           queuedMessages: messagesInQueue
-        },
-        
-        // Debug info
-        debug: {
-          totalVendorsFound: totalVendors,
-          vendorGrowthRaw: vendorGrowth,
-          vendorGrowthMap: Object.fromEntries(vendorGrowthMap),
-          period: {
-            start: sixMonthsAgo.toISOString().split('T')[0],
-            end: currentDate.toISOString().split('T')[0],
-            months: last6Months.map(m => `${m.monthName} (${m.month})`)
-          }
         }
       }
     });
