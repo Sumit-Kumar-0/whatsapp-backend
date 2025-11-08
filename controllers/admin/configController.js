@@ -126,21 +126,3 @@ export const getPublicConfigs = async (req, res) => {
     });
   }
 };
-
-// Initialize default configs
-// export const initializeDefaults = async (req, res) => {
-//   try {
-//     await configService.initializeDefaultConfigs();
-    
-//     res.status(200).json({
-//       success: true,
-//       message: 'Default configurations initialized successfully'
-//     });
-//   } catch (error) {
-//     console.error('Initialize defaults error:', error);
-//     res.status(500).json({
-//       success: false,
-//       message: 'Server error while initializing default configurations'
-//     });
-//   }
-// };

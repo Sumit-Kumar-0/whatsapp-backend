@@ -1,206 +1,146 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
-// import { initializeDefaultConfigs } from './services/configService.js';
-// import { initializeDefaultSubscriptionPlans } from './services/subscriptionPlanService.js';
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
 
 // Routes
-import authRoutes from './routes/auth.js';
-import adminRoutes from './routes/admin.js';
-import vendorRoutes from './routes/vendor.js';
-import facebookRoutes from './routes/facebook.js';
+import authRoutes from "./routes/auth.js";
+import adminRoutes from "./routes/admin.js";
+import vendorRoutes from "./routes/vendor.js";
+import facebookRoutes from "./routes/facebook.js";
 
 dotenv.config();
 
 const app = express();
 
-// Security middleware
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
+/* ✅ Fix: Required for NGROK, Cloudflare, Vercel, Render */
+app.set("trust proxy", 1);
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
-}));
+/* ✅ Fix: Helmet CSP disabled (otherwise Next.js + Ngrok breaks GET API) */
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 
-// 👇 aur ye bhi add kar just below cors()
-app.options('*', cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true,
-}));
+/* ✅ Fix: CORS for both dev ngrok URLs */
+app.use(
+  cors({
+    origin: [
+    "http://localhost:3000",
+    process.env.FRONTEND_URL,   // Ngrok frontend
+    "https://*.ngrok-free.dev"  // Allow any ngrok subdomain
+  ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+  })
+);
+
+/* ✅ Required for OPTIONS preflight */
+app.options(
+  "*",
+  cors({
+    origin: [
+      process.env.FRONTEND_URL,
+      "https://*.ngrok-free.dev",
+      "http://localhost:3000",
+    ],
+    credentials: true,
+  })
+);
 
 app.use(cookieParser());
 
-// Rate limiting - Different limits for different routes
+/* ✅ Rate limiting */
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // limit each IP to 100 requests per windowMs
-  message: {
-    success: false,
-    message: 'Too many requests from this IP, please try again later.'
-  }
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // limit each IP to 50 requests per windowMs for auth
-  message: {
-    success: false,
-    message: 'Too many authentication attempts, please try again later.'
-  }
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
-// Apply rate limiting
-app.use('/api/auth', authLimiter);
-app.use('/', generalLimiter);
+app.use("/api/auth", authLimiter);
+app.use("/", generalLimiter);
 
-// Body parser middleware
-app.use(express.json({ limit: '10mb' }));
+/* ✅ Body Parser */
+app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Database connection with better error handling
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/wanotifier', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('✅ MongoDB Connected Successfully'))
-.catch(err => {
-  console.error('❌ MongoDB Connection Error:', err);
-  process.exit(1);
-});
+/* ✅ MongoDB connect */
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => console.log("✅ MongoDB Connected Successfully"))
+  .catch((err) => {
+    console.error("❌ MongoDB Connection Error:", err);
+    process.exit(1);
+  });
 
-// MongoDB connection events
-mongoose.connection.on('connected', () => {
-  console.log('📊 MongoDB connected to:', mongoose.connection.db.databaseName);
-});
+mongoose.connection.on("connected", () =>
+  console.log("📊 DB:", mongoose.connection.db.databaseName)
+);
 
-mongoose.connection.on('error', (err) => {
-  console.error('❌ MongoDB connection error:', err);
-});
-
-mongoose.connection.on('disconnected', () => {
-  console.log('⚠️ MongoDB disconnected');
-});
-
-// Health check route
-app.get('/api/health', (req, res) => {
+/* ✅ Health */
+app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
-    message: 'Server is running healthy!',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    message: "Server healthy ✅",
+    time: new Date().toISOString(),
   });
 });
 
-// API status route
-app.get('/api', (req, res) => {
+/* ✅ API ROOT */
+app.get("/api", (req, res) => {
   res.status(200).json({
     success: true,
-    message: '🚀 WANotifier API is running!',
-    version: '1.0.0',
-    documentation: '/api/docs'
+    message: "WANotifier API Running ✅",
   });
 });
 
-  // 👇 Add this before 404
-app.get('/', (req, res) => {
+/* ✅ Root */
+app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: '👋 Hello World! Your backend is live on port 5000.'
+    message: "Backend Live ✅",
   });
 });
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/vendor', vendorRoutes);
-app.use('/api/facebook', facebookRoutes);
+/* ✅ ROUTES */
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/vendor", vendorRoutes);
+app.use("/api/facebook", facebookRoutes);
 
-// Error handling middleware
+/* ✅ Global Error Handler */
 app.use((err, req, res, next) => {
-  console.error('🔥 Error Stack:', err.stack);
-  
-  // Mongoose validation error
-  if (err.name === 'ValidationError') {
-    const messages = Object.values(err.errors).map(val => val.message);
-    return res.status(400).json({
-      success: false,
-      message: 'Validation Error',
-      errors: messages
-    });
-  }
-  
-  // Mongoose duplicate key error
-  if (err.code === 11000) {
-    return res.status(400).json({
-      success: false,
-      message: 'Duplicate field value entered'
-    });
-  }
-  
-  // JWT errors
-  if (err.name === 'JsonWebTokenError') {
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid token'
-    });
-  }
-  
-  if (err.name === 'TokenExpiredError') {
-    return res.status(401).json({
-      success: false,
-      message: 'Token expired'
-    });
-  }
+  console.error("🔥 Error:", err);
 
-  res.status(err.statusCode || 500).json({ 
-    success: false, 
-    message: err.message || 'Something went wrong!',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  return res.status(err.statusCode || 500).json({
+    success: false,
+    message: err.message || "Server Error",
   });
 });
 
-// 404 handler - should be last
-app.use('*', (req, res) => {
-  res.status(404).json({ 
-    success: false, 
-    message: `Route ${req.originalUrl} not found` 
+/* ✅ 404 Route */
+app.use("*", (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.originalUrl} not found`,
   });
 });
 
+/* ✅ Start Server */
 const PORT = process.env.PORT || 5000;
-
-// app.listen(PORT, async () => {
-//   console.log(`Server running on port ${PORT}`);
-  
-//   // Initialize default configurations
-//   try {
-//     await initializeDefaultConfigs();
-//     console.log('Default configurations checked/initialized');
-//   } catch (error) {
-//     console.error('Error initializing default configs:', error);
-//   }
-// });
-
-// app.listen(PORT, async () => {
-//   console.log(`Server running on port ${PORT}`);
-  
-//   // Initialize default subscription plans
-//   try {
-//     await initializeDefaultSubscriptionPlans();
-//     console.log('Default subscription plans checked/initialized');
-//   } catch (error) {
-//     console.error('Error initializing default subscription plans:', error);
-//   }
-// });
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
