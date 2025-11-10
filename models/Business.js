@@ -1,13 +1,29 @@
 import mongoose from 'mongoose';
 
 const BusinessSchema = new mongoose.Schema({
+
+  tokenPermissions: [{
+    type: String,
+    default: []
+  }],
+
+  signupCompleted: {
+    type: Boolean,
+    default: false
+  },
+
+  permissionsGranted: {
+    type: Boolean,
+    default: false
+  },
+  
   // User reference
   userId: {
     type: String,
     required: true,
     index: true
   },
-  
+
   // WhatsApp Business Account Details
   wabaId: {
     type: String,
@@ -21,7 +37,7 @@ const BusinessSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  
+
   // Authentication
   accessToken: {
     type: String,
@@ -31,7 +47,7 @@ const BusinessSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
-  
+
   // Additional Info
   businessName: {
     type: String,
@@ -41,14 +57,14 @@ const BusinessSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  
+
   // Status
   status: {
     type: String,
     enum: ['active', 'inactive', 'pending', 'suspended'],
     default: 'active'
   },
-  
+
   // Timestamps
   connectedAt: {
     type: Date,
