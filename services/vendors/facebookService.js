@@ -2,7 +2,7 @@ import axios from 'axios';
 import Business from '../../models/Business.js';
 
 const baseURL = 'https://graph.facebook.com';
-const version = 'v18.0';
+const version = 'v24.0';
 
 // Helper function to get business credentials
 export const getBusinessCredentials = async (userId) => {

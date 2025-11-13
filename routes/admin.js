@@ -47,7 +47,7 @@ router.get('/configs/', getAllConfigs);
 router.get('/config/:key', getConfigByKey);
 router.post('/config/', upsertConfig);
 router.put('/config/:key', upsertConfig);
-router.delete('/config/:key', deleteConfig);
+router.delete('/config/:id', deleteConfig);
 
 // subscription plans
 router.get('/subscription-plans/', getAllSubscriptionPlans);

@@ -85,9 +85,11 @@ export const upsertConfig = async (req, res) => {
 // Delete config
 export const deleteConfig = async (req, res) => {
   try {
-    const { key } = req.params;
+    const { id } = req.params; // This should now work correctly
+
+    console.log(id, ">>>>>>>>>>> Deleting config ID");
     
-    const config = await configService.deleteConfig(key);
+    const config = await configService.deleteConfig(id);
     
     if (!config) {
       return res.status(404).json({

@@ -90,8 +90,8 @@ export const upsertConfig = async (key, value, description = '', category = 'gen
 };
 
 // Delete config
-export const deleteConfig = async (key) => {
-  const config = await Config.findOneAndDelete({ key });
+export const deleteConfig = async (id) => {
+  const config = await Config.findByIdAndDelete(id); // Use findByIdAndDelete instead
   return config;
 };
 

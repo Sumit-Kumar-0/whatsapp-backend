@@ -55,7 +55,7 @@ const handleTokenExchange = async (req, res) => {
     console.log('Exchanging token code:', code.substring(0, 10) + '...');
 
     // Token exchange API call to Facebook
-    const response = await axios.get(`https://graph.facebook.com/v18.0/oauth/access_token`, {
+    const response = await axios.get(`https://graph.facebook.com/v24.0/oauth/access_token`, {
       params: {
         client_id: process.env.FACEBOOK_APP_ID,
         client_secret: process.env.FACEBOOK_APP_SECRET,
@@ -248,7 +248,7 @@ router.post('/request-permissions', async (req, res) => {
       });
     }
 
-    const permissionUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.FACEBOOK_APP_ID}&redirect_uri=${process.env.FRONTEND_URL}/dashboard&scope=business_management,whatsapp_business_management,whatsapp_business_messaging&state=${userId}&response_type=code`;
+    const permissionUrl = `https://www.facebook.com/v24.0/dialog/oauth?client_id=${process.env.FACEBOOK_APP_ID}&redirect_uri=${process.env.FRONTEND_URL}/dashboard&scope=business_management,whatsapp_business_management,whatsapp_business_messaging&state=${userId}&response_type=code`;
 
     console.log('Generated permission URL');
 

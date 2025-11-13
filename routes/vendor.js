@@ -11,6 +11,16 @@ import {
   syncTemplatesFromMeta
 } from '../controllers/vendor/templateController.js';
 
+import {
+  getVendorContacts,
+  getContactById,
+  createContact,
+  updateContact,
+  deleteContact,
+  bulkCreateContacts
+} from '../controllers/vendor/contactController.js'
+
+
 const router = express.Router();
 
 // Protect all vendor routes
@@ -26,5 +36,13 @@ router.put('/templates/:id', updateTemplate);
 router.post('/templates/:id/submit', submitTemplate);
 router.delete('/templates/:id', deleteTemplate);
 router.post('/templates/sync', syncTemplatesFromMeta);
+
+// contacts routes
+router.get('/contacts/', getVendorContacts);
+router.get('/contacts/:id', getContactById);
+router.post('/contacts/', createContact);
+router.post('/contacts/bulk', bulkCreateContacts);
+router.put('/contacts/:id', updateContact);
+router.delete('/contacts/:id', deleteContact);
 
 export default router;

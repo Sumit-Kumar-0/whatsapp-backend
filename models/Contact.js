@@ -6,7 +6,16 @@ const contactSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  name: {
+  firstName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  lastName: {
+    type: String,
+    trim: true
+  },
+  countryCode: {
     type: String,
     required: true
   },
@@ -14,8 +23,18 @@ const contactSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  country: {
+    type: String,
+    required: true
+  },
   email: {
-    type: String
+    type: String,
+    trim: true,
+    lowercase: true
+  },
+  company: {
+    type: String,
+    trim: true
   },
   category: {
     type: String,
@@ -23,10 +42,16 @@ const contactSchema = new mongoose.Schema({
     default: 'customer'
   },
   tags: [{
-    type: String
+    type: String,
+    trim: true
   }],
   source: {
-    type: String
+    type: String,
+    trim: true
+  },
+  notes: {
+    type: String,
+    trim: true
   },
   isActive: {
     type: Boolean,
@@ -38,5 +63,8 @@ const contactSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Compound index for unique phone number per vendor
+contactSchema.index({ vendorId: 1, countryCode: 1, phoneNumber: 1 }, { unique: true });
 
 export default mongoose.model('Contact', contactSchema);
