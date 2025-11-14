@@ -183,6 +183,34 @@ export const deleteContact = async (req, res) => {
   }
 };
 
+// Bulk delete contacts
+export const bulkDeleteContacts = async (req, res) => {
+  try {
+    const vendorId = req.user.id;
+    const { contactIds } = req.body;
+    
+    if (!contactIds || !Array.isArray(contactIds) || contactIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Contact IDs array is required'
+      });
+    }
+    
+    const result = await contactService.bulkDeleteContacts(contactIds, vendorId);
+    
+    res.status(200).json({
+      success: true,
+      message: `Successfully deleted ${result.deleted} contacts, ${result.notFound} not found`,
+      data: result
+    });
+  } catch (error) {
+    console.error('Bulk delete contacts error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while deleting contacts'
+    });
+  }
+};
 // Bulk create contacts
 export const bulkCreateContacts = async (req, res) => {
   try {
@@ -196,7 +224,30 @@ export const bulkCreateContacts = async (req, res) => {
       });
     }
     
-    const result = await contactService.bulkCreateContacts(contacts, vendorId);
+    // Validate each contact
+    const validationErrors = [];
+    const validContacts = [];
+    
+    contacts.forEach((contact, index) => {
+      if (!contact.firstName || !contact.countryCode || !contact.phoneNumber || !contact.country) {
+        validationErrors.push(`Row ${index + 1}: First name, country code, phone number and country are required`);
+      } else {
+        validContacts.push({
+          ...contact,
+          vendorId
+        });
+      }
+    });
+    
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: validationErrors
+      });
+    }
+    
+    const result = await contactService.bulkCreateContacts(validContacts, vendorId);
     
     res.status(201).json({
       success: true,

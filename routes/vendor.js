@@ -17,7 +17,8 @@ import {
   createContact,
   updateContact,
   deleteContact,
-  bulkCreateContacts
+  bulkCreateContacts,
+  bulkDeleteContacts
 } from '../controllers/vendor/contactController.js'
 
 
@@ -44,5 +45,7 @@ router.post('/contacts/', createContact);
 router.post('/contacts/bulk', bulkCreateContacts);
 router.put('/contacts/:id', updateContact);
 router.delete('/contacts/:id', deleteContact);
+router.post('/contacts/bulk-delete', bulkDeleteContacts);
+// router.delete('/contacts/bulk', bulkDeleteContacts);
 
 export default router;

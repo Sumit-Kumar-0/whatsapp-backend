@@ -93,3 +93,31 @@ export const bulkCreateContacts = async (contacts, vendorId) => {
   
   return result;
 };
+
+// Bulk delete contacts
+export const bulkDeleteContacts = async (contactIds, vendorId) => {
+  const result = {
+    deleted: 0,
+    notFound: 0,
+    errors: []
+  };
+  
+  for (const contactId of contactIds) {
+    try {
+      const contact = await Contact.findOneAndDelete({ _id: contactId, vendorId });
+      
+      if (contact) {
+        result.deleted++;
+      } else {
+        result.notFound++;
+      }
+    } catch (error) {
+      result.errors.push({
+        contactId,
+        error: error.message
+      });
+    }
+  }
+  
+  return result;
+};
